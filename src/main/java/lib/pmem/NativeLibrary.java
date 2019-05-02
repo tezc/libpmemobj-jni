@@ -1,4 +1,4 @@
-package com.hazelcast.pmem;
+package lib.pmem;
 
 
 import java.io.File;

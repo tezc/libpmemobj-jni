@@ -1,4 +1,4 @@
-#include "com_hazelcast_pmem_VolatileHeap.h"
+#include "lib_pmem_VolatileHeap.h"
 
 const char *volatile_layout_name = "libpmem_volatile_heap";
 
@@ -12,7 +12,7 @@ void throw_OOM(JNIEnv *env)
     env->ThrowNew(exClass, errmsg);
 }
 
-JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeOpenHeap
+JNIEXPORT jlong JNICALL Java_lib_pmem_VolatileHeap_nativeOpenHeap
   (JNIEnv *env, jobject obj, jstring path, jlong size)
 {
     const char* native_string = env->GetStringUTFChars(path, 0);
@@ -31,14 +31,14 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeOpenHeap
     return (long) pool;
 }
 
-JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCloseHeap
+JNIEXPORT void JNICALL Java_lib_pmem_VolatileHeap_nativeCloseHeap
   (JNIEnv *env, jobject obj, jlong poolHandle)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
     pmemobj_close(pool);
 }
 
-JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeAlloc
+JNIEXPORT jlong JNICALL Java_lib_pmem_VolatileHeap_nativeAlloc
   (JNIEnv *env, jobject obj, jlong poolHandle, jlong size)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
@@ -52,7 +52,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeAlloc
     return bytes.off;
 }
 
-JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
+JNIEXPORT jlong JNICALL Java_lib_pmem_VolatileHeap_nativeRealloc
   (JNIEnv *env, jobject obj, jlong poolHandle, jlong address, jlong size)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
@@ -66,7 +66,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
     return bytes.off;
 }
 
-JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeFree
+JNIEXPORT void JNICALL Java_lib_pmem_VolatileHeap_nativeFree
   (JNIEnv *env, jobject obj, jlong address)
 {
     PMEMoid oid = pmemobj_oid((const void*)address);

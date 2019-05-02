@@ -1,4 +1,4 @@
-package com.hazelcast.pmem;
+package lib.pmem;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,17 +62,35 @@ public class VolatileHeap {
     }
 
     public long allocate(long size) {
-        long offset = nativeAlloc(poolHandle, size);
-        return poolHandle + offset;
+        return toAddress(nativeAlloc(poolHandle, size));
     }
 
     public long realloc(long addr, long size) {
-        long offset = nativeRealloc(poolHandle, addr, size);
-        return poolHandle + offset;
+        return toAddress(nativeRealloc(poolHandle, toHandle(addr), size));
     }
 
     public void free(long addr) {
-        nativeFree(addr - poolHandle);
+        nativeFree(toHandle(addr));
+    }
+
+    public long toAddress(long handle) {
+        if (handle == 0) {
+            return 0;
+        }
+
+        return poolHandle + handle;
+    }
+
+    public long toHandle(long addr) {
+        if (addr == 0) {
+            return 0;
+        }
+
+        long handle = addr - poolHandle;
+        if (handle < 0) {
+            throw new IllegalArgumentException("addr is " + addr + " poolHandle is " + poolHandle);
+        }
+        return addr - poolHandle;
     }
 
     private static native long nativeOpenHeap(String path, long size);

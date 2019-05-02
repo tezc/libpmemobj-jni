@@ -1,4 +1,4 @@
-package com.hazelcast.pmem;
+package lib.pmem;
 
 import java.io.IOException;
 import java.nio.file.Files;

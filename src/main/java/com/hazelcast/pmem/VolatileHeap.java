@@ -1,4 +1,4 @@
-package lib.pmem;
+package com.hazelcast.pmem;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,11 +31,14 @@ public class VolatileHeap {
 
     public static VolatileHeap openHeap(String path, long size) throws IOException {
         size += FILE_SIZE_OVERHEAD;
+        long poolHandle = 0;
 
         synchronized (lock) {
-            long poolHandle = nativeOpenHeap(path, size);
-            if (poolHandle == 0) {
-                throw new IOException("Failed to open heap at : " + path);
+            try {
+                poolHandle = nativeOpenHeap(path, size);
+            } catch (IOException e) {
+                Files.deleteIfExists(Paths.get(path));
+                poolHandle = nativeCreateHeap(path, size);
             }
 
             VolatileHeap heap = new VolatileHeap(Paths.get(path), size, poolHandle);
@@ -93,7 +96,8 @@ public class VolatileHeap {
         return addr - poolHandle;
     }
 
-    private static native long nativeOpenHeap(String path, long size);
+    private static native long nativeCreateHeap(String path, long size) throws IOException;
+    private static native long nativeOpenHeap(String path, long size) throws IOException;
     private static native void nativeCloseHeap(long poolHandle);
 
     private static native long nativeAlloc(long poolHandle, long size);

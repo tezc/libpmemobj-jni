@@ -1,6 +1,6 @@
-#include "lib_pmem_NonVolatileHeap.h"
+#include "com_hazelcast_pmem_NonVolatileHeap.h"
 
-const char *nonvolatile_layout_name = "lib_pmem_nonvolatile_heap";
+const char *nonvolatile_layout_name = "com_hazelcast_pmem_nonvolatile_heap";
 
 void native_throw_OOM(JNIEnv *env)
 {
@@ -12,7 +12,7 @@ void native_throw_OOM(JNIEnv *env)
     env->ThrowNew(exClass, errmsg);
 }
 
-JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeCreateHeap
+JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeCreateHeap
   (JNIEnv *env, jobject obj, jstring path, jlong size)
 {
     const char* native_string = env->GetStringUTFChars(path, 0);
@@ -30,7 +30,7 @@ JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeCreateHeap
     return (long) pool;
 }
 
-JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeOpenHeap
+JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeOpenHeap
   (JNIEnv *env, jobject obj, jstring path)
 {
     const char* native_string = env->GetStringUTFChars(path, 0);
@@ -42,7 +42,7 @@ JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeOpenHeap
     return (long) pool;
 }
 
-JNIEXPORT jint JNICALL Java_lib_pmem_NonVolatileHeap_nativeSetRoot
+JNIEXPORT jint JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeSetRoot
   (JNIEnv *env, jobject obj, jlong poolHandle, jlong val)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
@@ -58,21 +58,21 @@ JNIEXPORT jint JNICALL Java_lib_pmem_NonVolatileHeap_nativeSetRoot
     return ret;
 }
 
-JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeGetRoot
+JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeGetRoot
   (JNIEnv *env, jobject obj, jlong poolHandle)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
     return (jlong)*(long *)pmemobj_direct(pmemobj_root(pool, 8));
 }
 
-JNIEXPORT void JNICALL Java_lib_pmem_NonVolatileHeap_nativeCloseHeap
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeCloseHeap
   (JNIEnv *env, jobject obj, jlong poolHandle)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
     pmemobj_close(pool);
 }
 
-JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeAlloc
+JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeAlloc
   (JNIEnv *env, jobject obj, jlong poolHandle, jlong size)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
@@ -86,7 +86,7 @@ JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeAlloc
     return bytes.off;
 }
 
-JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeRealloc
+JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeRealloc
   (JNIEnv *env, jobject obj, jlong poolHandle, jlong address, jlong size)
 {
     PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
@@ -100,7 +100,7 @@ JNIEXPORT jlong JNICALL Java_lib_pmem_NonVolatileHeap_nativeRealloc
     return bytes.off;
 }
 
-JNIEXPORT void JNICALL Java_lib_pmem_NonVolatileHeap_nativeFree
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeFree
   (JNIEnv *env, jobject obj, jlong address)
 {
     PMEMoid oid = pmemobj_oid((const void*)address);

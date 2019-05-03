@@ -1,4 +1,4 @@
-package lib.pmem;
+package com.hazelcast.pmem;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,6 +37,7 @@ public class NonVolatileHeap {
             }
 
             return new NonVolatileHeap(Paths.get(path), poolHandle);
+
         }
     }
 

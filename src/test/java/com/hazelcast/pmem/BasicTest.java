@@ -11,10 +11,13 @@ public class BasicTest {
     public void openTest() throws IOException {
         VolatileHeap heap = VolatileHeap.openHeap("/mnt/mem/pool", 1000 * 1024 * 1024);
 
+        long ts = System.nanoTime();
         long[] ptrs = new long[10000];
         for (int i = 0; i < 10000; i++) {
             ptrs[i] = heap.allocate(new Random().nextInt(40000));
         }
+
+        System.out.println("Out : " + (System.nanoTime() - ts));
 
         for (int i = 0; i < 10000; i++) {
             heap.free(ptrs[i]);

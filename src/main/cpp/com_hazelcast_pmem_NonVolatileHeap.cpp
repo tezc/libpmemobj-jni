@@ -12,6 +12,16 @@ void native_throw_OOM(JNIEnv *env)
     env->ThrowNew(exClass, errmsg);
 }
 
+void native_throw_exception(JNIEnv *env)
+{
+    char className[50] = "java/lang/IllegalArgumentException";
+    jclass exClass = env->FindClass(className);
+
+    char errmsg[250];
+    strcpy(errmsg, pmemobj_errormsg());
+    env->ThrowNew(exClass, errmsg);
+}
+
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeCreateHeap
   (JNIEnv *env, jobject obj, jstring path, jlong size)
 {
@@ -108,6 +118,100 @@ JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeFree
 
     TOID_ASSIGN(bytes, oid);
     POBJ_FREE(&bytes);
+}
+
+
+
+
+
+
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeStartTransaction
+  (JNIEnv *env, jobject obj, jlong poolHandle)
+{
+    int result = 0;
+    PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
+    int ret = pmemobj_tx_begin(pool, NULL, TX_PARAM_NONE);
+    if (ret) {
+        pmemobj_tx_end();
+        result = -1;
+    }
+    return result;
+}
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeCommitTransaction
+  (JNIEnv *env, jobject obj)
+{
+    int rc = 0;
+    if (pmemobj_tx_stage() == TX_STAGE_NONE) {
+        rc = -1;
+    }
+    if (pmemobj_tx_stage() == TX_STAGE_WORK) {
+        pmemobj_tx_commit();
+        rc = 1;
+    }
+    if (pmemobj_tx_stage() == TX_STAGE_ONCOMMIT | pmemobj_tx_stage() == TX_STAGE_ONABORT) {
+        pmemobj_tx_end();
+        return 2;
+    }
+
+    return rc;
+}
+
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeEndTransaction
+  (JNIEnv *env, jobject obj)
+{
+    pmemobj_tx_end();
+}
+
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeAbortTransaction
+  (JNIEnv *env, jobject obj)
+{
+    if (pmemobj_tx_stage() == TX_STAGE_WORK) pmemobj_tx_abort(0);
+    if (pmemobj_tx_stage() == TX_STAGE_ONABORT) pmemobj_tx_end();
+}
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeTransactionState
+  (JNIEnv *env, jobject obj)
+{
+    switch (pmemobj_tx_stage())
+    {
+        case TX_STAGE_NONE: return 1;
+        case TX_STAGE_WORK: return 2;
+        case TX_STAGE_ONCOMMIT: return 3;
+        case TX_STAGE_ONABORT: return 4;
+        case TX_STAGE_FINALLY: return 5;
+        default: return 0;
+    }
+}
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeAddToTransaction
+  (JNIEnv *env, jobject obj, jlong poolHandle, jlong address, jlong size)
+{
+    int result = -1;
+    int stage = pmemobj_tx_stage();
+    if (stage == TX_STAGE_NONE) {
+        PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
+        int begin_result = pmemobj_tx_begin(pool, NULL, TX_PARAM_NONE);
+        if (begin_result) {
+            result = -2;
+            pmemobj_tx_end();
+            native_throw_exception(env);
+        }
+        else {
+            int rc = pmemobj_tx_add_range_direct((const void *)address, (size_t)size);
+            if (rc != 0) {
+                native_throw_exception(env);
+            }
+            return 2;
+        }
+    }
+    else if (stage == TX_STAGE_WORK) {
+        pmemobj_tx_add_range_direct((const void *)address, (size_t)size);
+        result = 2;
+    }
+
+    return result;
 }
 
 

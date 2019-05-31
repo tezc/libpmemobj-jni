@@ -41,6 +41,24 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeRealloc
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeFree
   (JNIEnv*, jobject, jlong);
 
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeStartTransaction
+  (JNIEnv *env, jobject obj, jlong poolHandle);
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeCommitTransaction
+  (JNIEnv *env, jobject obj);
+
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeEndTransaction
+  (JNIEnv *env, jobject obj);
+
+JNIEXPORT void JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeAbortTransaction
+  (JNIEnv *env, jobject obj);
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeTransactionState
+  (JNIEnv *env, jobject obj);
+
+JNIEXPORT int JNICALL Java_com_hazelcast_pmem_NonVolatileHeap_nativeAddToTransaction
+  (JNIEnv *env, jobject obj, jlong poolHandle, jlong address, jlong size);
+
 #ifdef __cplusplus
 }
 #endif

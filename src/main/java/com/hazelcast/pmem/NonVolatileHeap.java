@@ -67,6 +67,7 @@ public class NonVolatileHeap {
 
         return poolHandle + handle;
     }
+
     public long toHandle(long addr) {
         if (addr == 0) {
             return 0;
@@ -99,6 +100,33 @@ public class NonVolatileHeap {
         return nativeGetRoot(poolHandle);
     }
 
+    public int startTransaction() {
+        int ret = nativeStartTransaction(poolHandle);
+        if (ret == -1) {
+            throw new IllegalStateException("Starting transaction failed");
+        }
+
+        return ret;
+    }
+
+    public int addToTransaction(long address, long size) {
+        int ret = nativeAddToTransaction(poolHandle, address, size);
+        if (ret != 2) {
+            throw new IllegalStateException("Transaction failed return value : " + ret);
+        }
+
+        return ret;
+    }
+
+    public int commitTransaction() {
+        int ret = nativeCommitTransaction();
+        if (ret != 2) {
+            throw new IllegalStateException("Transaction failed return value " + ret);
+        }
+
+        return ret;
+    }
+
     private static native long nativeCreateHeap(String path, long size);
     private static native long nativeOpenHeap(String path);
     private static native void nativeCloseHeap(long poolHandle);
@@ -109,4 +137,12 @@ public class NonVolatileHeap {
     private static native long nativeAlloc(long poolHandle, long size);
     private static native long nativeRealloc(long poolHandle, long addr, long size);
     private static native int nativeFree(long addr);
+
+    private static native int nativeAddToTransaction(long poolHandle, long address, long size);
+    private static native int nativeStartTransaction(long poolHandle);
+    private static native int nativeCommitTransaction();
+    private static native void nativeEndTransaction();
+    private static native void nativeAbortTransaction();
+    private static native int nativeTransactionState();
+
 }

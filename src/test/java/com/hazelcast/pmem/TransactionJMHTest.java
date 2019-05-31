@@ -73,7 +73,7 @@ public class TransactionJMHTest {
 
     @Benchmark
     public void testSmall() {
-        final int MOD_SIZE = 20;
+        final int MOD_SIZE = 32;
 
         heap.addToTransaction(ptr1, MOD_SIZE);
         UNSAFE.copyMemory(ptr5, ptr1, MOD_SIZE);

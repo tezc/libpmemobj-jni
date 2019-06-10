@@ -1,28 +1,16 @@
-#include <libpmemobj.h>
+#include <libvmem.h>
 #include <libpmem.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <jni.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <jni.h>
 
 #ifndef _Included_com_hazelcast_pmem_VolatileHeap
 #define _Included_com_hazelcast_pmem_VolatileHeap
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define CHAR_TYPE_OFFSET 1017
-TOID_DECLARE(char, CHAR_TYPE_OFFSET);
 
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
-  (JNIEnv*, jobject, jstring, jlong);
-
-JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeOpenHeap
-  (JNIEnv*, jobject, jstring, jlong);
+  (JNIEnv*, jobject, jstring, jlong, jboolean);
 
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCloseHeap
   (JNIEnv*, jobject, jlong);
@@ -34,9 +22,6 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
   (JNIEnv*, jobject, jlong, jlong, jlong);
 
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeFree
-  (JNIEnv*, jobject, jlong);
+  (JNIEnv*, jobject, jlong, jlong);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

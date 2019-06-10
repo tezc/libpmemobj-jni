@@ -1,102 +1,122 @@
 #include "com_hazelcast_pmem_VolatileHeap.h"
 
-const char *volatile_layout_name = "libpmem_volatile_heap";
 
-void throw_OOM(JNIEnv *env)
+struct volatile_heap {
+    void* pmemaddr;
+    size_t mapped_len;
+    VMEM* vmp;
+};
+
+
+void throw_OOM(JNIEnv* env, size_t size)
 {
     char className[50] = "java/lang/OutOfMemoryError";
     jclass exClass = env->FindClass(className);
 
     char errmsg[250];
-    strcpy(errmsg, pmemobj_errormsg());
+    sprintf(errmsg, "Failed to allocate %lu bytes!", size);
     env->ThrowNew(exClass, errmsg);
 }
 
-void throw_IOException(JNIEnv *env)
+void throw_io_exception(JNIEnv* env, const char* msg)
 {
     char className[50] = "java/io/IOException";
     jclass exClass = env->FindClass(className);
 
-    char errmsg[250];
-    strcpy(errmsg, pmemobj_errormsg());
+    char errmsg[256];
+    strcpy(errmsg, msg);
     env->ThrowNew(exClass, errmsg);
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
-  (JNIEnv *env, jobject obj, jstring path, jlong size)
+  (JNIEnv *env, jobject obj, jstring path, jlong size, jboolean validate)
 {
+	size_t mapped_len = 0;
+    void* pmemaddr;
+    int is_pmem;
+    struct volatile_heap* heap = NULL;
+    int validate_request = (validate == JNI_TRUE);
     const char* native_string = env->GetStringUTFChars(path, 0);
 
-    PMEMobjpool *pool = pmemobj_create(native_string, volatile_layout_name, (size_t) size, S_IRUSR | S_IWUSR);
-
-    env->ReleaseStringUTFChars(path, native_string);
-
-    if (pool == NULL) {
-        throw_IOException(env);
+    if ((pmemaddr = pmem_map_file(native_string, (size_t)size,
+                                  PMEM_FILE_CREATE | PMEM_FILE_TMPFILE,
+                                  0666, &mapped_len, &is_pmem)) == NULL) {
+        throw_io_exception(env, pmem_errormsg());
+        return (jlong) NULL;
     }
 
-    return (long) pool;
-}
 
-JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeOpenHeap
-  (JNIEnv *env, jobject obj, jstring path, jlong size)
-{
-    const char* native_string = env->GetStringUTFChars(path, 0);
-
-    PMEMobjpool *pool = pmemobj_open(native_string, volatile_layout_name);
-
-    env->ReleaseStringUTFChars(path, native_string);
-
-    if (pool == NULL) {
-        throw_IOException(env);
+    if (validate_request && !is_pmem) {
+        pmem_unmap(pmemaddr, mapped_len);
+        throw_io_exception(env, "Path is not persistent memory!");
+        return (jlong) NULL;
     }
 
-    return (long) pool;
+    VMEM* vmp = vmem_create_in_region(pmemaddr, mapped_len);
+    if (vmp == NULL) {
+        pmem_unmap(pmemaddr, mapped_len);
+        throw_io_exception(env, vmem_errormsg());
+        return (jlong) NULL;
+    }
+
+    heap = (struct volatile_heap*) malloc(sizeof(struct volatile_heap));
+    heap->pmemaddr = pmemaddr;
+    heap->mapped_len = mapped_len;
+    heap->vmp = vmp;
+
+    return (long) heap;
 }
 
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCloseHeap
-  (JNIEnv *env, jobject obj, jlong poolHandle)
+  (JNIEnv *env, jobject obj, jlong heap)
 {
-    PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
-    pmemobj_close(pool);
+    struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
+
+    vmem_delete(volatile_heap->vmp);
+
+    int rc = pmem_unmap(volatile_heap->pmemaddr, volatile_heap->mapped_len);
+    if (rc != 0) {
+        free(volatile_heap);
+        throw_io_exception(env, pmem_errormsg());
+        return;
+    }
+
+    free(volatile_heap);
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeAlloc
-  (JNIEnv *env, jobject obj, jlong poolHandle, jlong size)
+  (JNIEnv *env, jobject obj, jlong heap, jlong size)
 {
-    PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
-    PMEMoid bytes = OID_NULL;
+    struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
 
-    int rc = pmemobj_alloc(pool, &bytes, (size_t)size, 0, NULL, NULL);
-    if (rc == -1) {
-        throw_OOM(env);
+    void* p = vmem_malloc(volatile_heap->vmp, (size_t) size);
+    if (p == NULL) {
+        throw_OOM(env, (size_t) size);
+        return (jlong) NULL;
     }
 
-    return bytes.off;
+    return (jlong) p;
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
-  (JNIEnv *env, jobject obj, jlong poolHandle, jlong address, jlong size)
+  (JNIEnv *env, jobject obj, jlong heap, jlong address, jlong size)
 {
-    PMEMobjpool *pool = (PMEMobjpool*)poolHandle;
-    PMEMoid bytes = pmemobj_oid((const void*)address);
+    struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
 
-    int rc = pmemobj_realloc(pool, &bytes, (size_t)size, 0);
-    if (rc == -1) {
-        throw_OOM(env);
+    void* p = vmem_realloc(volatile_heap->vmp, (void*) address, (size_t) size);
+    if (p == NULL) {
+        throw_OOM(env, (size_t) size);
+        return (jlong) NULL;
     }
 
-    return bytes.off;
+    return (jlong) p;
 }
 
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeFree
-  (JNIEnv *env, jobject obj, jlong address)
+  (JNIEnv *env, jobject obj, jlong heap, jlong address)
 {
-    PMEMoid oid = pmemobj_oid((const void*)address);
-    TOID(char) bytes;
-
-    TOID_ASSIGN(bytes, oid);
-    POBJ_FREE(&bytes);
+    struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
+    vmem_free(volatile_heap->vmp, (void*) address);
 }
 
 

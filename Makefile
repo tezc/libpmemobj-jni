@@ -1,11 +1,11 @@
-CC = g++
+CC = gcc
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 LIBPMEMDIR:=$(ROOT_DIR)/src/main/resources/lib/
 
 JNI_INCLUDES = $(JAVA_HOME)/include $(JAVA_HOME)/include/linux
 
 CFLAGS = -O3 -DNDEBUG -fPIC
-LINK_FLAGS = -fPIC -O3 -DNDEBUG -shared -Wl,--whole-archive $(LIBPMEMDIR)/libpmem.a $(LIBPMEMDIR)/libpmemobj.a -Wl,--no-whole-archive
+LINK_FLAGS = -fPIC -O3 -DNDEBUG -shared -Wl,--whole-archive $(LIBPMEMDIR)/libpmem.a $(LIBPMEMDIR)/libvmem.a -Wl,--no-whole-archive
 
 CPP_SOURCE_DIR = src/main/cpp
 TARGET_DIR = bin

@@ -53,8 +53,7 @@ public class NativeLibrary {
             Files.copy(src, nativeLibPath, StandardCopyOption.REPLACE_EXISTING);
 
             return nativeLibPath.toAbsolutePath().toString();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -63,14 +62,11 @@ public class NativeLibrary {
 
         if (osName.contains("mac")) {
             return OS.MAC;
-        }
-        else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
             return OS.UNIX;
-        }
-        else if (osName.contains("win")) {
+        } else if (osName.contains("win")) {
             return OS.WINDOWS;
-        }
-        else {
+        } else {
             throw new IllegalStateException("libpmem is not supported on : " + osName);
         }
     }

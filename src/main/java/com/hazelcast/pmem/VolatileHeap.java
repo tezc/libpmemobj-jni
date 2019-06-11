@@ -22,18 +22,22 @@ public class VolatileHeap {
         this.open = true;
     }
 
-    public static synchronized VolatileHeap openHeap(String path, long size, boolean validate) throws IOException {
-        Path dir = Paths.get(path);
-        Files.createDirectories(dir);
-        long poolHandle = nativeCreateHeap(path, size, validate);
+    public static synchronized VolatileHeap createHeap(String path, long size, boolean validate) throws IOException {
+        Path filePath = Paths.get(path);
+        long heapHandle = nativeCreateHeap(path, size, validate);
 
-        return new VolatileHeap(dir, poolHandle);
+        return new VolatileHeap(filePath, heapHandle);
     }
 
     public void close() {
         synchronized (closeLock) {
             if (open) {
                 nativeCloseHeap(heapHandle);
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    //ignore
+                }
                 open = false;
             }
         }
@@ -55,5 +59,5 @@ public class VolatileHeap {
     private static native void nativeCloseHeap(long poolHandle);
     private static native long nativeAlloc(long poolHandle, long size);
     private static native long nativeRealloc(long poolHandle, long addr, long size);
-    private static native int nativeFree(long poolHandle, long addr);
+    private static native void nativeFree(long poolHandle, long addr);
 }

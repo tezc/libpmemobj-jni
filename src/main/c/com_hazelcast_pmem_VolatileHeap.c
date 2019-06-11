@@ -39,7 +39,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
     const char* native_string = (*env)->GetStringUTFChars(env, path, 0);
 
     pmemaddr = pmem_map_file(native_string, (size_t)size,
-                             PMEM_FILE_CREATE | PMEM_FILE_TMPFILE,
+                             PMEM_FILE_CREATE,
                              0666, &mapped_len, &is_pmem);
     if (pmemaddr == NULL) {
         throw_io_exception(env, pmem_errormsg());

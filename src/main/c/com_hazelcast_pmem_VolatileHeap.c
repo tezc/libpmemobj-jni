@@ -11,21 +11,21 @@ struct volatile_heap {
 void throw_OOM(JNIEnv* env, size_t size)
 {
     char className[50] = "java/lang/OutOfMemoryError";
-    jclass exClass = env->FindClass(className);
+    jclass exClass = (*env)->FindClass(env, className);
 
     char errmsg[250];
     sprintf(errmsg, "Failed to allocate %lu bytes!", size);
-    env->ThrowNew(exClass, errmsg);
+    (*env)->ThrowNew(env, exClass, errmsg);
 }
 
 void throw_io_exception(JNIEnv* env, const char* msg)
 {
     char className[50] = "java/io/IOException";
-    jclass exClass = env->FindClass(className);
+    jclass exClass = (*env)->FindClass(env, className);
 
     char errmsg[256];
     strcpy(errmsg, msg);
-    env->ThrowNew(exClass, errmsg);
+    (*env)->ThrowNew(env, exClass, errmsg);
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
@@ -35,18 +35,18 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
     void* pmemaddr;
     int is_pmem;
     struct volatile_heap* heap = NULL;
-    int validate_request = (validate == JNI_TRUE);
-    const char* native_string = env->GetStringUTFChars(path, 0);
+    int validate_requested = (validate == JNI_TRUE);
+    const char* native_string = (*env)->GetStringUTFChars(env, path, 0);
 
-    if ((pmemaddr = pmem_map_file(native_string, (size_t)size,
-                                  PMEM_FILE_CREATE | PMEM_FILE_TMPFILE,
-                                  0666, &mapped_len, &is_pmem)) == NULL) {
+    pmemaddr = pmem_map_file(native_string, (size_t)size,
+                             PMEM_FILE_CREATE | PMEM_FILE_TMPFILE,
+                             0666, &mapped_len, &is_pmem);
+    if (pmemaddr == NULL) {
         throw_io_exception(env, pmem_errormsg());
         return (jlong) NULL;
     }
 
-
-    if (validate_request && !is_pmem) {
+    if (validate_requested && !is_pmem) {
         pmem_unmap(pmemaddr, mapped_len);
         throw_io_exception(env, "Path is not persistent memory!");
         return (jlong) NULL;
@@ -118,5 +118,3 @@ JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeFree
     struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
     vmem_free(volatile_heap->vmp, (void*) address);
 }
-
-

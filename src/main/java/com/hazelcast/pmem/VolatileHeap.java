@@ -24,7 +24,19 @@ public class VolatileHeap {
 
     public static synchronized VolatileHeap createHeap(String path, long size, boolean validate) throws IOException {
         Path filePath = Paths.get(path);
-        long heapHandle = nativeCreateHeap(path, size, validate);
+        long heapHandle;
+
+        try {
+            heapHandle = nativeCreateHeap(path, size, validate);
+        } catch (IOException e) {
+            try {
+                Files.deleteIfExists(filePath);
+            } catch (IOException e1) {
+                //ignore
+            }
+
+            throw e;
+        }
 
         return new VolatileHeap(filePath, heapHandle);
     }
@@ -36,7 +48,7 @@ public class VolatileHeap {
                 try {
                     Files.deleteIfExists(path);
                 } catch (IOException e) {
-                    //ignore
+                    System.out.println("Failed to delete file at : " + path);
                 }
                 open = false;
             }

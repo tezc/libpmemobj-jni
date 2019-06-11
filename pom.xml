@@ -44,9 +44,9 @@
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
-        <outputDirectory>${target.dir}/classes</outputDirectory>
+        <outputDirectory>target/classes</outputDirectory>
         <testSourceDirectory>src/test/java</testSourceDirectory>
-        <testOutputDirectory>${target.dir}/test-classes</testOutputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
 
         <resources>
             <resource>

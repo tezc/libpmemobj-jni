@@ -10,22 +10,18 @@ struct volatile_heap {
 
 void throw_OOM(JNIEnv* env, size_t size)
 {
-    char className[50] = "java/lang/OutOfMemoryError";
-    jclass exClass = (*env)->FindClass(env, className);
+    char errmsg[256];
 
-    char errmsg[250];
+    jclass exClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+
     sprintf(errmsg, "Failed to allocate %lu bytes!", size);
     (*env)->ThrowNew(env, exClass, errmsg);
 }
 
 void throw_io_exception(JNIEnv* env, const char* msg)
 {
-    char className[50] = "java/io/IOException";
-    jclass exClass = (*env)->FindClass(env, className);
-
-    char errmsg[256];
-    strcpy(errmsg, msg);
-    (*env)->ThrowNew(env, exClass, errmsg);
+    jclass exClass = (*env)->FindClass(env, "java/io/IOException");
+    (*env)->ThrowNew(env, exClass, msg);
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
@@ -48,7 +44,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
 
     if (validate_requested && !is_pmem) {
         pmem_unmap(pmemaddr, mapped_len);
-        throw_io_exception(env, "Path is not persistent memory!");
+        throw_io_exception(env, "Given path is not persistent memory!");
         return (jlong) NULL;
     }
 

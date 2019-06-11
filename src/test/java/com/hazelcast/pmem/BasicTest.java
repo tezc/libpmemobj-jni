@@ -23,7 +23,7 @@ public class BasicTest {
     }
 
     @Test
-    public void openTest() throws IOException {
+    public void openTest() {
         long[] ptrs = new long[10000];
         for (int i = 0; i < 10000; i++) {
             ptrs[i] = heap.allocate(new Random().nextInt(40000) + 1);

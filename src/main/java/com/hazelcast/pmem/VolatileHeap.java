@@ -44,12 +44,18 @@ public class VolatileHeap {
     public void close() throws IOException {
         synchronized (closeLock) {
             if (open) {
-                nativeCloseHeap(heapHandle);
                 try {
-                    Files.deleteIfExists(path);
+                    nativeCloseHeap(heapHandle);
                 } catch (IOException e) {
-                    System.err.println("Failed to delete file at : " + path);
+                    // TODO:logging
+                } finally {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        //ignore
+                    }
                 }
+
                 open = false;
             }
         }

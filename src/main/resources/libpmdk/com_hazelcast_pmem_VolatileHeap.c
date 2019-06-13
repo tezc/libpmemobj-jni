@@ -32,13 +32,20 @@ void throw_io_exception(JNIEnv* env, const char* msg)
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
   (JNIEnv* env, jobject obj, jstring path, jlong size)
 {
+    char errmsg[256];
     size_t mapped_len = 0;
     void* mapped_addr;
     int is_pmem;
     struct volatile_heap* heap = NULL;
     const char* file_path = (*env)->GetStringUTFChars(env, path, 0);
 
-    mapped_addr = pmem_map_file(file_path, (size_t)size,
+    if ((size_t) size <= VMEM_MIN_POOL) {
+        sprintf(errmsg, "Heap size must be greater than %lu", VMEM_MIN_POOL);
+        throw_io_exception(env, errmsg);
+        return (jlong) NULL;
+    }
+
+    mapped_addr = pmem_map_file(file_path, (size_t) size,
                                 PMEM_FILE_CREATE,
                                 0666, &mapped_len, &is_pmem);
     if (mapped_addr == NULL) {
@@ -102,7 +109,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeAlloc
 }
 
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
-  (JNIEnv *env, jobject obj, jlong handle, jlong address, jlong size)
+  (JNIEnv* env, jobject obj, jlong handle, jlong address, jlong size)
 {
     struct volatile_heap* volatile_heap = (struct volatile_heap*) handle;
 
@@ -116,7 +123,7 @@ JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeRealloc
 }
 
 JNIEXPORT void JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeFree
-  (JNIEnv *env, jobject obj, jlong heap, jlong address)
+  (JNIEnv* env, jobject obj, jlong heap, jlong address)
 {
     struct volatile_heap* volatile_heap = (struct volatile_heap*) heap;
     vmem_free(volatile_heap->vmp, (void*) address);

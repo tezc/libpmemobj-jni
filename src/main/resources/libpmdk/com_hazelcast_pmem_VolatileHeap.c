@@ -1,5 +1,9 @@
 #include "com_hazelcast_pmem_VolatileHeap.h"
 
+#include "libvmem.h"
+#include "libpmem.h"
+
+#include <stdlib.h>
 
 struct volatile_heap {
     void* pmemaddr;
@@ -27,7 +31,7 @@ void throw_io_exception(JNIEnv* env, const char* msg)
 JNIEXPORT jlong JNICALL Java_com_hazelcast_pmem_VolatileHeap_nativeCreateHeap
   (JNIEnv *env, jobject obj, jstring path, jlong size, jboolean validate)
 {
-	size_t mapped_len = 0;
+    size_t mapped_len = 0;
     void* pmemaddr;
     int is_pmem;
     struct volatile_heap* heap = NULL;

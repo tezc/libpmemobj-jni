@@ -48,7 +48,7 @@ public class VolatileHeap {
                 try {
                     Files.deleteIfExists(path);
                 } catch (IOException e) {
-                    System.out.println("Failed to delete file at : " + path);
+                    System.err.println("Failed to delete file at : " + path);
                 }
                 open = false;
             }

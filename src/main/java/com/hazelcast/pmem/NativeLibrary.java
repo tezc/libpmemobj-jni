@@ -39,14 +39,14 @@ public class NativeLibrary {
     private static String extractBundledLib() {
 
         OS os = getOS();
-        String path = NATIVE_LIBRARY_DIR + "libpmem-" + getArchitecture() + os.getFileExtension();
+        String path = NATIVE_LIBRARY_DIR + "libpmdk-" + getArchitecture() + os.getFileExtension();
 
         try (InputStream src = NativeLibrary.class.getClassLoader().getResourceAsStream(path)){
             if (src == null) {
                 throw new RuntimeException("Cannot find native libray at : " + path);
             }
 
-            File file = File.createTempFile("libpmem", os.getFileExtension());
+            File file = File.createTempFile("libpmdk", os.getFileExtension());
             file.deleteOnExit();
 
             Path nativeLibPath = file.toPath();
@@ -67,7 +67,7 @@ public class NativeLibrary {
         } else if (osName.contains("win")) {
             return OS.WINDOWS;
         } else {
-            throw new IllegalStateException("libpmem is not supported on : " + osName);
+            throw new IllegalStateException("libpmdk is not supported on : " + osName);
         }
     }
 

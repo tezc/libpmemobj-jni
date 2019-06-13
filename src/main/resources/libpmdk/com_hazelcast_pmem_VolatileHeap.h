@@ -1,9 +1,4 @@
-#include <libvmem.h>
-#include <libpmem.h>
 #include <jni.h>
-
-#include <stdlib.h>
-#include <string.h>
 
 #ifndef _Included_com_hazelcast_pmem_VolatileHeap
 #define _Included_com_hazelcast_pmem_VolatileHeap

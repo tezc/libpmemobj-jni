@@ -1,9 +1,9 @@
 To update PMDK version, follow the steps on a linux machine
 
-1- Build project at https://github.com/pmem/pmdk
+1- Build project at https://github.com/pmem/pmdk, follow instructions in this page to find out required dependencies
 2- Under src/include, copy libpmem.h and libvmem.h to this directory
 3- Under src/nondebug copy libpmem.a and libvmem.a to this directory
-4- Run make, libpmdk-x86-64.so will be created, copy it to final destination.
+4- Run "make", libpmdk-x86-64.so will be created, copy it to resources/lib.
 
 
 

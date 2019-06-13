@@ -22,12 +22,12 @@ public class VolatileHeap {
         this.open = true;
     }
 
-    public static synchronized VolatileHeap createHeap(String path, long size, boolean validate) throws IOException {
+    public static synchronized VolatileHeap createHeap(String path, long size) throws IOException {
         Path filePath = Paths.get(path);
         long heapHandle;
 
         try {
-            heapHandle = nativeCreateHeap(path, size, validate);
+            heapHandle = nativeCreateHeap(path, size);
         } catch (IOException e) {
             try {
                 Files.deleteIfExists(filePath);
@@ -41,7 +41,7 @@ public class VolatileHeap {
         return new VolatileHeap(filePath, heapHandle);
     }
 
-    public void close() {
+    public void close() throws IOException {
         synchronized (closeLock) {
             if (open) {
                 nativeCloseHeap(heapHandle);
@@ -53,6 +53,10 @@ public class VolatileHeap {
                 open = false;
             }
         }
+    }
+
+    public boolean isPmem() {
+        return nativeIsPmem(heapHandle);
     }
 
     public long allocate(long size) {
@@ -67,9 +71,10 @@ public class VolatileHeap {
         nativeFree(heapHandle, addr);
     }
 
-    private static native long nativeCreateHeap(String path, long size, boolean validate) throws IOException;
-    private static native void nativeCloseHeap(long poolHandle);
-    private static native long nativeAlloc(long poolHandle, long size);
-    private static native long nativeRealloc(long poolHandle, long addr, long size);
-    private static native void nativeFree(long poolHandle, long addr);
+    private static native long nativeCreateHeap(String path, long size) throws IOException;
+    private static native void nativeCloseHeap(long heapHandle) throws IOException;
+    private static native boolean nativeIsPmem(long heapHandle);
+    private static native long nativeAlloc(long heapHandle, long size);
+    private static native long nativeRealloc(long heapHandle, long addr, long size);
+    private static native void nativeFree(long heapHandle, long addr);
 }

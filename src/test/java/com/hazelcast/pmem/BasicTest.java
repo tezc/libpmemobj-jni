@@ -12,18 +12,18 @@ public class BasicTest {
 
     @Before
     public void open() throws IOException {
-        heap = VolatileHeap.createHeap("/mnt/mem/file", 1000 * 1024 * 1024, false);
+        heap = VolatileHeap.createHeap("/mnt/mem/file", 1000 * 1024 * 1024);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if (heap != null) {
             heap.close();
         }
     }
 
     @Test
-    public void openTest() {
+    public void openTest() throws IOException {
         long[] ptrs = new long[10000];
         for (int i = 0; i < 10000; i++) {
             ptrs[i] = heap.allocate(new Random().nextInt(40000) + 1);
@@ -35,5 +35,10 @@ public class BasicTest {
         }
 
         heap.close();
+    }
+
+    @Test(expected = OutOfMemoryError.class)
+    public void oomTest() {
+        heap.allocate(20000000000L);
     }
 }

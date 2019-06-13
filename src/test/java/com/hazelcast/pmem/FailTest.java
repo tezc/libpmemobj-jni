@@ -12,11 +12,11 @@ public class FailTest {
 
     @Before
     public void open() throws IOException {
-        heap = VolatileHeap.createHeap("/mnt/mem/file", 1000 * 1024 * 1024, false);
+        heap = VolatileHeap.createHeap("/mnt/mem/file", 1000 * 1024 * 1024);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if (heap != null) {
             heap.close();
         }
